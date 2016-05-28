@@ -1,62 +1,135 @@
 package com.hujiang.player21.serviceAgent;
 
-import cn.dreampie.client.ClientRequest;
-import cn.dreampie.client.ClientResult;
 import com.alibaba.fastjson.JSON;
-import com.hujiang.player21.model.GameHandInfo;
+import com.hujiang.player21.model.GameInfo;
 import com.hujiang.player21.model.PlayerInfo;
+import com.squareup.okhttp.*;
+import lombok.extern.slf4j.Slf4j;
+import rx.Observable;
+
+import java.io.IOException;
 
 /**
  * Created by shuXu on 2016/5/28 0028.
  */
+@Slf4j
 public class GameAgent {
-    static String host="http://192.168.36.103:8002";
-    /*
-    static HttpRestClient _client=new HttpRestClient(host);
-    public static PlayerInfo newPlayer(){
-        ClientRequest request=new ClientRequest("/player");
-        ClientResult result= _client.build(request).post();
-        return JSON.parseObject(result.getResult(), PlayerInfo.class);
-    }
-    public static GameHandInfo startGame(int player){
-        ClientRequest request=new ClientRequest("/game/start?player="+player);
-        ClientResult result= _client.build(request).post();
-        return JSON.parseObject(result.getResult(), GameHandInfo.class);
-    }
-    public static GameHandInfo hit(int player){
-        ClientRequest request=new ClientRequest("/game/hit?player="+player);
-        ClientResult result= _client.build(request).get();
-        return JSON.parseObject(result.getResult(), GameHandInfo.class);
-    }
-    public static GameHandInfo stand(int player){
-        ClientRequest request=new ClientRequest("/game/stand?player="+player);
-        ClientResult result= _client.build(request).get();
-        return JSON.parseObject(result.getResult(), GameHandInfo.class);
-    }
-    public static void removePlayer(int player){
-        ClientRequest request=new ClientRequest("/player?player="+player);
-        request.setJsonParam("dd");
-        ClientResult result= _client.build(request).post();
-    }
-    */
+    private static final String DEAR_HOST = "http://192.168.36.103:8002";
+    public static final MediaType JSON_MEDIA_TYPE = MediaType.parse("application/json; charset=utf-8");
+    private OkHttpClient client = new OkHttpClient();
 
-    public static PlayerInfo newPlayer(){
-        WebResponse response=WebClient.post(host+"/player");
-        return JSON.parseObject(response.getResult(), PlayerInfo.class);
+    private static GameAgent INSTANCE = new GameAgent();
+
+    private GameAgent() {
+        ;
     }
-    public static GameHandInfo startGame(int player){
-        WebResponse response=WebClient.post(host +"/game/start?player="+player);
-        return JSON.parseObject(response.getResult(), GameHandInfo.class);
+
+    public static GameAgent getINSTANCE() {
+        return INSTANCE;
     }
-    public static GameHandInfo hit(int player){
-        WebResponse response=WebClient.get(host + "/game/hit?player=" + player);
-        return JSON.parseObject(response.getResult(), GameHandInfo.class);
+
+    public PlayerInfo registPlayer() throws IOException {
+        RequestBody body = RequestBody.create(JSON_MEDIA_TYPE, "");
+        PlayerInfo result = (PlayerInfo) Observable.create(sub -> {
+            Request request = new Request.Builder()
+                    .url(DEAR_HOST + "/player")
+                    .post(body)
+                    .build();
+            Response response = null;
+            try {
+                response = client.newCall(request).execute();
+                sub.onNext(JSON.parseObject(response.body().string(), PlayerInfo.class));
+                sub.onCompleted();
+            } catch (IOException e) {
+                log.error("Registor player error", e);
+                sub.onError(e);
+                return;
+            }
+
+
+        }).retry(2).toBlocking().first();
+        return result;
     }
-    public static GameHandInfo stand(int player){
-        WebResponse response=WebClient.get(host + "/game/stand?player=" + player);
-        return JSON.parseObject(response.getResult(), GameHandInfo.class);
+
+    public GameInfo startGame(int player) {
+        RequestBody body = RequestBody.create(JSON_MEDIA_TYPE, "");
+        GameInfo result = (GameInfo) Observable.create(sub -> {
+            Request request = new Request.Builder()
+                    .url(DEAR_HOST + "/game/start" + "?player=" + player)
+                    .post(body)
+                    .build();
+            Response response = null;
+            try {
+                response = client.newCall(request).execute();
+                sub.onNext(JSON.parseObject(response.body().string(), GameInfo.class));
+                sub.onCompleted();
+            } catch (IOException e) {
+                log.error("Start game error", e);
+                sub.onError(e);
+                return;
+            }
+
+        }).retry(2).toBlocking().first();
+        return result;
     }
-    public static void removePlayer(int player){
-        WebResponse response=WebClient.post(host + "/player?player=" + player);
+
+    public GameInfo hit(int player) {
+        GameInfo result = (GameInfo) Observable.create(sub -> {
+            Request request = new Request.Builder()
+                    .url(DEAR_HOST + "/game/hit" + "?player=" + player)
+                    .get()
+                    .build();
+            Response response = null;
+            try {
+                response = client.newCall(request).execute();
+                sub.onNext(JSON.parseObject(response.body().string(), GameInfo.class));
+                sub.onCompleted();
+            } catch (IOException e) {
+                log.error("Start game error", e);
+                sub.onError(e);
+                return;
+            }
+
+        }).retry(2).toBlocking().first();
+        return result;
+    }
+
+    public GameInfo stand(int player) {
+        GameInfo result = (GameInfo) Observable.create(sub -> {
+            Request request = new Request.Builder()
+                    .url(DEAR_HOST + "/game/stand" + "?player=" + player)
+                    .get()
+                    .build();
+            Response response = null;
+            try {
+                response = client.newCall(request).execute();
+                sub.onNext(JSON.parseObject(response.body().string(), GameInfo.class));
+                sub.onCompleted();
+            } catch (IOException e) {
+                log.error("Start game error", e);
+                sub.onError(e);
+                return;
+            }
+
+        }).retry(2).toBlocking().first();
+        return result;
+    }
+
+    public void removePlayer(int player) {
+        Observable.create(sub -> {
+            Request request = new Request.Builder()
+                    .url(DEAR_HOST + "/player" + "?player=" + player)
+                    .delete()
+                    .build();
+            try {
+                sub.onNext(client.newCall(request).execute());
+                sub.onCompleted();
+            } catch (IOException e) {
+                log.error("Start game error", e);
+                sub.onError(e);
+                return;
+            }
+
+        }).retry(2).toBlocking().first();
     }
 }

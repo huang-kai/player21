@@ -1,69 +1,58 @@
 package com.hujiang.player21.service;
 
-import com.alibaba.fastjson.JSON;
-import com.hujiang.player21.model.GameChoiceEnum;
-import com.hujiang.player21.model.GameHandInfo;
-import com.hujiang.player21.model.PlayerInfo;
-import com.hujiang.player21.model.ResultEnum;
+import com.hujiang.player21.model.GameInfo;
 import com.hujiang.player21.serviceAgent.GameAgent;
-import org.apache.log4j.Logger;
+import lombok.extern.slf4j.Slf4j;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.io.IOException;
+
 
 /**
  * Created by shuXu on 2016/5/28 0028.
  */
+@Slf4j
 public class GameService {
-    private static Logger logger = Logger.getLogger(GameService.class);
+    private enum choice {
+        Hit,
+        Stand
+    }
 
-    public void test()
-    {
-        PlayerInfo playerInfo= GameAgent.newPlayer();
-    }
-    public static void Run(int time){
-        logger.info("start play,time:"+time);
-        List<GameHandInfo> list= new ArrayList<GameHandInfo>();
-        Integer winCount=0;
-        Integer lostCount=0;
-        for(int i=0;i<time;i++){
-            GameHandInfo game=play();
-            list.add(game);
-            if(game.getResult().equals(ResultEnum.Win.toString())){
-                winCount++;
-            }else
-                lostCount++;
-            logger.info(JSON.toJSONString(game));
+    private GameAgent agent = GameAgent.getINSTANCE();
+
+    public void start(int time) {
+        log.info("start play,time:" + time);
+        int player = 0;
+        try {
+            player = agent.registPlayer().getPlayer();
+            for (int i = 0; i < time; i++) {
+
+                GameInfo info = play(player);
+                log.info("Play time={} and result={}", i, info.getResult());
+            }
+        } catch (IOException e) {
+            log.error("Play error", e);
+        } finally {
+            agent.removePlayer(player);
         }
-        logger.info("win:"+winCount+",lost:"+lostCount);
     }
-    static GameHandInfo play() {
-        PlayerInfo player=GameAgent.newPlayer();
-        GameHandInfo gameInfo=GameAgent.startGame(player.getPlayer());
-        while (true){
-            GameChoiceEnum result=Choose(gameInfo);
-            switch (result){
-                case Null:
-                    break;
+
+    private GameInfo play(int player) throws IOException {
+
+        GameInfo gameInfo = agent.startGame(player);
+        while (gameInfo.isContinue()) {
+            switch (decide(gameInfo)) {
                 case Hit:
-                    gameInfo=GameAgent.hit(player.getPlayer());
+                    gameInfo = agent.hit(player);
                     break;
                 case Stand:
-                    gameInfo=GameAgent.stand(player.getPlayer());
-                    break;
+                    gameInfo = agent.stand(player);
             }
-            if(isEnd(gameInfo))
-                break;
         }
         return gameInfo;
     }
 
-    static boolean isEnd(GameHandInfo game){
-        return game.getResult()!=null &&
-                (game.getResult().equals(ResultEnum.Lost.toString())||game.getResult().equals(ResultEnum.Win.toString()));
-    }
-    // todo: ¸Ä½øËã·¨
-    static GameChoiceEnum Choose(GameHandInfo gameInfo){
-        return gameInfo.getPlayer().size()>2?GameChoiceEnum.Stand:GameChoiceEnum.Hit;
+    static choice decide(GameInfo gameInfo) {
+        //TODO insert your code here.
+        return gameInfo.getPlayer().size() > 2 ? choice.Hit : choice.Stand;
     }
 }
