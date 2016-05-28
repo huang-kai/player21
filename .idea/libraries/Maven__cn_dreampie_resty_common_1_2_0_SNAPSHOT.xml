@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: cn.dreampie:resty-common:1.2.0-SNAPSHOT">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/cn/dreampie/resty-common/1.2.0-SNAPSHOT/resty-common-1.2.0-20160317.152845-13.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/cn/dreampie/resty-common/1.2.0-SNAPSHOT/resty-common-1.2.0-20160317.152845-13-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/cn/dreampie/resty-common/1.2.0-SNAPSHOT/resty-common-1.2.0-20160317.152845-13-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
