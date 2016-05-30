@@ -79,7 +79,7 @@
     </pluginRepository>
     </pluginRepositories>
     <build>
-
+        <finalName>blackjack-player</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

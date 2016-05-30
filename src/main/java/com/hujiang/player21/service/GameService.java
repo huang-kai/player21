@@ -11,8 +11,9 @@ import java.io.IOException;
  * Created by shuXu on 2016/5/28 0028.
  */
 @Slf4j
-public class GameService {
-    private enum choice {
+public abstract class GameService {
+
+    protected enum choice {
         Hit,
         Stand
     }
@@ -24,12 +25,22 @@ public class GameService {
         int player = 0;
         try {
             player = agent.registPlayer().getPlayer();
-            for (int i = 0; i < time; i++) {
-
-                GameInfo info = play(player);
-                log.info("Play time={} and result={}", i, info.getResult());
+            if (time==0) {
+                for (;;) {
+                    GameInfo info = play(player);
+                    log.info("Player={}, result={}", player, info.getResult());
+                    Thread.sleep(100);
+                }
+            }else {
+                for (int i = 0; i < time; i++) {
+                    GameInfo info = play(player);
+                    log.info("Player={}, result={}", player, info.getResult());
+                    Thread.sleep(100);
+                }
             }
         } catch (IOException e) {
+            log.error("Play error", e);
+        } catch (InterruptedException e) {
             log.error("Play error", e);
         } finally {
             agent.removePlayer(player);
@@ -51,8 +62,5 @@ public class GameService {
         return gameInfo;
     }
 
-    static choice decide(GameInfo gameInfo) {
-        //TODO insert your code here.
-        return gameInfo.getPlayer().size() > 2 ? choice.Hit : choice.Stand;
-    }
+    abstract choice decide(GameInfo gameInfo);
 }
